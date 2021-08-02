@@ -12,4 +12,5 @@ In this article, the authors were able to create a model that learned to play a 
 https://towardsdatascience.com/how-to-teach-an-ai-to-play-games-deep-reinforcement-learning-28f9b920440a
 
 Simple Space Invaders clone made in PyGame
-https://github.com/russs123/space_invaders
+Created by Clear Code Projects
+https://github.com/clear-code-projects/Space-invaders
