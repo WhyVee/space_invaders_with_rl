@@ -4,6 +4,7 @@ import obstacle
 from alien import Alien, Extra
 from random import choice, randint
 from laser import Laser
+from DQN import DQNagent
  
 class Game:
 	def __init__(self):
@@ -160,7 +161,11 @@ class Game:
 			screen.blit(victory_surf,victory_rect)
 
 	def run(self):
-		self.player.update()
+		#pass in the current states of agent and environment
+		dqn.get_state(player, alien_lasers, extra, aliens)
+		#based on state, agent will choose an action
+		action = dqn.agent_action()
+		self.player.update(action)
 		self.alien_lasers.update()
 		self.extra.update()
 		
@@ -204,6 +209,8 @@ if __name__ == '__main__':
 	clock = pygame.time.Clock()
 	game = Game()
 	crt = CRT()
+
+	dqn = DQNagent()
 
 	ALIENLASER = pygame.USEREVENT + 1
 	pygame.time.set_timer(ALIENLASER,800)
