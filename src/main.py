@@ -162,7 +162,7 @@ class Game:
 
 	def run(self):
 		#pass in the current states of agent and environment
-		dqn.get_state(player, alien_lasers, extra, aliens)
+		dqn.get_state(self.player, self.blocks, self.alien_lasers, self.extra, self.aliens)
 		#based on state, agent will choose an action
 		action = dqn.agent_action()
 		self.player.update(action)

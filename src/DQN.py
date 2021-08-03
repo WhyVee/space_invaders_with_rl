@@ -1,4 +1,4 @@
-import numpy as np 
+import numpy as np
 
 class DQNagent():
     def __init__(self):
@@ -20,7 +20,24 @@ class DQNagent():
         #     self.reward = 10
         # return self.reward
 
-    def get_state(self, player, alien_lasers, extra, aliens):
+    def add_to_matrix(self, matrix, sprites):
+        '''
+        Add location of sprites to matrix
+        ---
+        Inputs:
+        matrix: numpy matrix
+        sprites: group of sprites
+
+        Returns:
+        matrix: inputs the locations of the sprites into numpy matrix
+        '''
+        for sprite in sprites:
+            x, y, w, h = sprite.rect
+            y = self.screen_height - y
+            matrix[y-h:y, x:x+w] = 1
+        return matrix
+
+    def get_state(self, player, blocks, alien_lasers, extra, aliens):
         '''
         Each sprite has a self.rect attribute which shows the sprites x, y alignment
         pass the location of all active sprites to agent
@@ -29,7 +46,16 @@ class DQNagent():
 
         take a screenshot? and use image processing
         '''
-        pass
+        # create an empty matrix the size of the screen
+        self.screen_height = 600
+        self.screen_width = 600
+        self.env_matrix = np.zeros((self.screen_height,self.screen_width))
+        sprite_group_list = [player, blocks, alien_lasers, extra, aliens]
+
+        for sprite_group in sprite_group_list:
+            self.env_matrix = self.add_to_matrix(self.env_matrix, sprite_group)
+
+        print(np.sum(self.env_matrix))
 
     def agent_action(self):
         '''
