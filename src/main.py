@@ -42,9 +42,12 @@ class Game:
 		music.set_volume(0.2)
 		music.play(loops = -1)
 		self.laser_sound = pygame.mixer.Sound('../audio/laser.wav')
-		self.laser_sound.set_volume(0.5)
+		self.laser_sound.set_volume(0.1)
 		self.explosion_sound = pygame.mixer.Sound('../audio/explosion.wav')
-		self.explosion_sound.set_volume(0.3)
+		self.explosion_sound.set_volume(0.1)
+
+		# done
+		self.done = False
 
 	def create_obstacle(self, x_start, y_start,offset_x):
 		for row_index, row in enumerate(self.shape):
@@ -113,12 +116,14 @@ class Game:
 				if aliens_hit:
 					for alien in aliens_hit:
 						self.score += alien.value
+						dqn.set_reward(alien.value)
 					laser.kill()
 					self.explosion_sound.play()
 
 				# extra collision
 				if pygame.sprite.spritecollide(laser,self.extra,True):
 					self.score += 500
+					dqn.set_reward(500)
 					laser.kill()
 
 		# alien lasers 
@@ -131,9 +136,10 @@ class Game:
 				if pygame.sprite.spritecollide(laser,self.player,False):
 					laser.kill()
 					self.lives -= 1
+					dqn.set_reward(-100)
 					if self.lives <= 0:
-						pygame.quit()
-						sys.exit()
+						self.done = True
+						
 
 		# aliens
 		if self.aliens:
@@ -141,8 +147,8 @@ class Game:
 				pygame.sprite.spritecollide(alien,self.blocks,True)
 
 				if pygame.sprite.spritecollide(alien,self.player,False):
-					pygame.quit()
-					sys.exit()
+					self.done = True
+						
 	
 	def display_lives(self):
 		for live in range(self.lives - 1):
@@ -161,13 +167,14 @@ class Game:
 			screen.blit(victory_surf,victory_rect)
 
 	def run(self):
-		#pass in the current states of agent and environment
-		dqn.get_state(self.player, self.blocks, self.alien_lasers, self.extra, self.aliens)
-
 		#based on state, agent will choose an action
 		action = dqn.agent_action()
-		
 		self.player.update(action)
+
+		#pass in the current states of agent and environment
+		dqn.get_state(self.player, self.blocks, self.alien_lasers, self.extra, self.aliens)
+		dqn.q_learning()
+
 		self.alien_lasers.update()
 		self.extra.update()
 		
@@ -204,30 +211,42 @@ class CRT:
 		screen.blit(self.tv,(0,0))
 
 if __name__ == '__main__':
-	pygame.init()
-	screen_width = 600
-	screen_height = 600
-	screen = pygame.display.set_mode((screen_width,screen_height))
-	clock = pygame.time.Clock()
-	game = Game()
-	crt = CRT()
 
 	dqn = DQNagent()
+	num_episodes = 2
+	
+	for _ in range(num_episodes):
+		pygame.init()
+		screen_width = 600
+		screen_height = 600
+		screen = pygame.display.set_mode((screen_width,screen_height))
+		clock = pygame.time.Clock()
+		game = Game()
+		crt = CRT()
 
-	ALIENLASER = pygame.USEREVENT + 1
-	pygame.time.set_timer(ALIENLASER,800)
+		ALIENLASER = pygame.USEREVENT + 1
+		pygame.time.set_timer(ALIENLASER,800)
 
-	while True:
-		for event in pygame.event.get():
-			if event.type == pygame.QUIT:
-				pygame.quit()
-				sys.exit()
-			if event.type == ALIENLASER:
-				game.alien_shoot()
+		done = False
+		while not done:
+			for event in pygame.event.get():
+							
+				if event.type == ALIENLASER:
+					game.alien_shoot()
 
-		screen.fill((30,30,30))
-		game.run()
-		#crt.draw()
-			
-		pygame.display.flip()
-		clock.tick(60)
+			screen.fill((30,30,30))
+			game.run()
+			#crt.draw()
+				
+			pygame.display.flip()
+			clock.tick(60)
+			done = game.done
+
+		# after an episode, decay epsilon
+		dqn.decay()
+	# before exit, save weights
+	dqn.save_weights()
+	print(f'Average Score: {dqn.total_reward / num_episodes} for {num_episodes} runs')	
+
+	pygame.quit()
+	sys.exit()
