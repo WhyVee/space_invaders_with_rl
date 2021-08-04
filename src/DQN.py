@@ -2,6 +2,9 @@ import numpy as np
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import InputLayer, Dense, MaxPooling1D, MaxPooling2D, Activation, Dropout, Flatten, Conv1D, Conv2D
 from tensorflow.keras.optimizers import Adam
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+
 
 
 class DQNagent():
@@ -16,7 +19,6 @@ class DQNagent():
 
         # build model
         self.model = self.build_model()
-        print(self.model.summary())
 
     def build_model(self):
         model = Sequential()
