@@ -31,16 +31,32 @@ class Player(pygame.sprite.Sprite):
 		# 	self.ready = False
 		# 	self.laser_time = pygame.time.get_ticks()
 		# 	self.laser_sound.play()
-		if action < .5:
+		if action == 0:
+			pass
+		elif action == 1:
 			self.rect.x += self.speed 
-		else:
+		elif action == 2:
 			self.rect.x -= self.speed 
-
-		if action < .75 and action > .25 and self.ready:
-			self.shoot_laser()
-			self.ready = False
-			self.laser_time = pygame.time.get_ticks()
-			self.laser_sound.play()
+		elif action == 3:
+			self.rect.x += self.speed 
+			if self.ready:
+				self.shoot_laser()
+				self.ready = False
+				self.laser_time = pygame.time.get_ticks()
+				self.laser_sound.play()
+		elif action == 4:
+			self.rect.x -= self.speed
+			if self.ready:
+				self.shoot_laser()
+				self.ready = False
+				self.laser_time = pygame.time.get_ticks()
+				self.laser_sound.play() 
+		elif action == 5:
+			if self.ready:
+				self.shoot_laser()
+				self.ready = False
+				self.laser_time = pygame.time.get_ticks()
+				self.laser_sound.play()
 
 	def recharge(self):
 		if not self.ready:

@@ -1,6 +1,6 @@
 import numpy as np
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import InputLayer, Dense, MaxPooling1D, Activation, Dropout, Flatten, Conv1D
+from tensorflow.keras.layers import InputLayer, Dense, MaxPooling1D, MaxPooling2D, Activation, Dropout, Flatten, Conv1D, Conv2D
 from tensorflow.keras.optimizers import Adam
 
 
@@ -8,34 +8,28 @@ class DQNagent():
     def __init__(self):
         self.screen_height = 600
         self.screen_width = 600
-        self.env_matrix = np.zeros((self.screen_height,self.screen_width)).reshape(600,600,1)
-        print(self.env_matrix.shape)
+        self.env_matrix = np.zeros((self.screen_height,self.screen_width)).reshape(600, 600, 1)
 
         # action space is: 1) Movement: Left, right, stationary
                         #  2) Shooting: True or False
         self.action_space_size = 6
 
-        # build main model, trained every step
+        # build model
         self.model = self.build_model()
         print(self.model.summary())
-
-        # build target model, predict every step
-        self.target_model = self.build_model()
-        self.target_model.set_weights(self.model.get_weights())
-
 
     def build_model(self):
         model = Sequential()
 
-        model.add(InputLayer(batch_input_shape=self.env_matrix.shape))
-        # model.add(Conv2D(256, (3, 3), input_shape=self.env_matrix.shape))  # OBSERVATION_SPACE_VALUES = (10, 10, 3) a 10x10 RGB image.
+        # model.add(InputLayer(batch_input_shape=self.env_matrix.shape))
+        model.add(Conv2D(100, (3, 3), input_shape=self.env_matrix.shape))  # OBSERVATION_SPACE_VALUES = (10, 10, 3) a 10x10 RGB image.
         model.add(Activation('relu'))
-        model.add(MaxPooling1D(pool_size=(6)))
+        model.add(MaxPooling2D(pool_size=(2,2)))
         model.add(Dropout(0.2))
 
-        model.add(Conv1D(256, (9)))
+        model.add(Conv2D(100, (3,3)))
         model.add(Activation('relu'))
-        model.add(MaxPooling1D(pool_size=(2)))
+        model.add(MaxPooling2D(pool_size=(2,2)))
         model.add(Dropout(0.2))
 
         model.add(Flatten())  # this converts our 3D feature maps to 1D feature vectors
@@ -95,12 +89,15 @@ class DQNagent():
         for sprite_group in sprite_group_list:
             self.env_matrix = self.add_to_matrix(self.env_matrix, sprite_group)
 
+        # reshape the matrix so that it can be passed to model
+        self.env_matrix = self.env_matrix.reshape(-1, 600, 600, 1)
+
     def agent_action(self):
         '''
         Based on the current state of the environment, choose the action that leads to the best reward
         '''
-
-        return self.model.predict(self.env_matrix)
+        prediction = self.model.predict(self.env_matrix)
+        return np.argmax(prediction)
 
 
     # def get_input(self):
