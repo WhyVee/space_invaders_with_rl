@@ -57,8 +57,8 @@ class Player(pygame.sprite.Sprite):
 	def shoot_laser(self):
 		self.lasers.add(Laser(self.rect.center,-8,self.rect.bottom))
 
-	def update(self):
-		self.get_input()
+	def update(self, action):
+		self.get_input(action)
 		self.constraint()
 		self.recharge()
 		self.lasers.update()

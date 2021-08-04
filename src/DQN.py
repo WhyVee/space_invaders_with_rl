@@ -1,8 +1,49 @@
 import numpy as np
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import InputLayer, Dense, MaxPooling1D, Activation, Dropout, Flatten, Conv1D
+from tensorflow.keras.optimizers import Adam
+
 
 class DQNagent():
     def __init__(self):
-        pass
+        self.screen_height = 600
+        self.screen_width = 600
+        self.env_matrix = np.zeros((self.screen_height,self.screen_width)).reshape(600,600,1)
+        print(self.env_matrix.shape)
+
+        # action space is: 1) Movement: Left, right, stationary
+                        #  2) Shooting: True or False
+        self.action_space_size = 6
+
+        # build main model, trained every step
+        self.model = self.build_model()
+        print(self.model.summary())
+
+        # build target model, predict every step
+        self.target_model = self.build_model()
+        self.target_model.set_weights(self.model.get_weights())
+
+
+    def build_model(self):
+        model = Sequential()
+
+        model.add(InputLayer(batch_input_shape=self.env_matrix.shape))
+        # model.add(Conv2D(256, (3, 3), input_shape=self.env_matrix.shape))  # OBSERVATION_SPACE_VALUES = (10, 10, 3) a 10x10 RGB image.
+        model.add(Activation('relu'))
+        model.add(MaxPooling1D(pool_size=(6)))
+        model.add(Dropout(0.2))
+
+        model.add(Conv1D(256, (9)))
+        model.add(Activation('relu'))
+        model.add(MaxPooling1D(pool_size=(2)))
+        model.add(Dropout(0.2))
+
+        model.add(Flatten())  # this converts our 3D feature maps to 1D feature vectors
+        model.add(Dense(64))
+
+        model.add(Dense(self.action_space_size, activation='softmax'))  # ACTION_SPACE_SIZE = how many choices (9)
+        model.compile(loss="mse", optimizer=Adam(lr=0.001), metrics=['accuracy'])
+        return model
 
     def set_reward(self, player, crash):
         """
@@ -34,7 +75,7 @@ class DQNagent():
         for sprite in sprites:
             x, y, w, h = sprite.rect
             y = self.screen_height - y
-            matrix[y-h:y, x:x+w] = 1
+            matrix[y:y+h, x:x+w] = 1
         return matrix
 
     def get_state(self, player, blocks, alien_lasers, extra, aliens):
@@ -46,22 +87,20 @@ class DQNagent():
 
         take a screenshot? and use image processing
         '''
-        # create an empty matrix the size of the screen
-        self.screen_height = 600
-        self.screen_width = 600
+        # reset an empty matrix the size of the screen
         self.env_matrix = np.zeros((self.screen_height,self.screen_width))
         sprite_group_list = [player, blocks, alien_lasers, extra, aliens]
 
+        # for every sprite group, populate the matrix with the position of every sprite
         for sprite_group in sprite_group_list:
             self.env_matrix = self.add_to_matrix(self.env_matrix, sprite_group)
-
-        print(np.sum(self.env_matrix))
 
     def agent_action(self):
         '''
         Based on the current state of the environment, choose the action that leads to the best reward
         '''
-        return np.random.random()
+
+        return self.model.predict(self.env_matrix)
 
 
     # def get_input(self):
@@ -77,3 +116,8 @@ class DQNagent():
 	# 		self.ready = False
 	# 		self.laser_time = pygame.time.get_ticks()
 	# 		self.laser_sound.play()
+
+if __name__ == '__main__':
+    dqn = DQNagent()
+    action = dqn.agent_action()
+    print(action)
