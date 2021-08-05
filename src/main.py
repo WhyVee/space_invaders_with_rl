@@ -5,6 +5,7 @@ from alien import Alien, Extra
 from random import choice, randint
 from laser import Laser
 from DQN import DQNagent
+import numpy as np
  
 class Game:
 	def __init__(self):
@@ -136,7 +137,7 @@ class Game:
 				if pygame.sprite.spritecollide(laser,self.player,False):
 					laser.kill()
 					self.lives -= 1
-					dqn.set_reward(-100)
+					dqn.set_reward(-500)
 					if self.lives <= 0:
 						self.done = True
 						
@@ -147,6 +148,11 @@ class Game:
 				pygame.sprite.spritecollide(alien,self.blocks,True)
 
 				if pygame.sprite.spritecollide(alien,self.player,False):
+					self.done = True
+
+				x, y, w, h = alien.rect
+				if y <= 0:
+					dqn.set_reward(-2000)
 					self.done = True
 						
 	
@@ -173,7 +179,7 @@ class Game:
 
 		#pass in the current states of agent and environment
 		dqn.get_state(self.player, self.blocks, self.alien_lasers, self.extra, self.aliens)
-		dqn.q_learning()
+		# dqn.q_learning()
 
 		self.alien_lasers.update()
 		self.extra.update()
@@ -244,9 +250,11 @@ if __name__ == '__main__':
 
 		# after an episode, decay epsilon
 		dqn.decay()
+		dqn.reset_rewards()
 	# before exit, save weights
 	dqn.save_weights()
-	print(f'Average Score: {dqn.total_reward / num_episodes} for {num_episodes} runs')	
+	print(f'Average Score: {np.mean(dqn.reward_list)} for {num_episodes} runs')	
+	print(dqn.reward_list)
 
 	pygame.quit()
 	sys.exit()

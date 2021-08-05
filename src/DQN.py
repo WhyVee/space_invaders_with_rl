@@ -21,8 +21,9 @@ class DQNagent():
 
         # build model, load and set weights
         self.model = self.build_model()
-        # weights = self.load_weights()
-        # self.model.set_weights(weights)
+        # print(self.model.summary())
+        weights = self.load_weights()
+        self.model.set_weights(weights)
         
         # q learning variables
         self.gamma = 0.95
@@ -33,6 +34,7 @@ class DQNagent():
         # rewards, temp and total
         self.temp_reward = 0
         self.total_reward = 0
+        self.reward_list = []
 
         # instantiate prediction with 0s, len of action space
         self.prediction = np.zeros(self.action_space_size)
@@ -45,15 +47,18 @@ class DQNagent():
     def build_model(self):
         model = Sequential()
 
-        # model.add(InputLayer(batch_input_shape=self.env_matrix.shape))
-        model.add(Conv2D(100, (3, 3), input_shape=self.env_matrix.shape))
+        model.add(Conv2D(10, (9, 9), input_shape=self.env_matrix.shape))
+        # model.add(Conv2D(100, (3, 3), input_shape=self.env_matrix.shape))
         model.add(Activation('relu'))
-        model.add(MaxPooling2D(pool_size=(2,2)))
+        model.add(MaxPooling2D(pool_size=(4,4)))
+        # model.add(MaxPooling2D(pool_size=(2,2)))
         model.add(Dropout(0.2))
 
-        model.add(Conv2D(100, (3,3)))
+        model.add(Conv2D(10, (9,9)))
+        # model.add(Conv2D(100, (3,3)))
         model.add(Activation('relu'))
-        model.add(MaxPooling2D(pool_size=(2,2)))
+        model.add(MaxPooling2D(pool_size=(4,4)))
+        # model.add(MaxPooling2D(pool_size=(2,2)))
         model.add(Dropout(0.2))
 
         model.add(Flatten())  # this converts our 3D feature maps to 1D feature vectors
@@ -62,6 +67,13 @@ class DQNagent():
         model.add(Dense(self.action_space_size, activation='softmax'))  # ACTION_SPACE_SIZE = how many choices (6)
         model.compile(loss="mse", optimizer=Adam(lr=0.001), metrics=['accuracy'])
         return model
+
+        # model = Sequential()
+        # model.add(InputLayer(batch_input_shape=self.env_matrix.shape))
+        # model.add(Dense(10, activation='sigmoid'))
+        # model.add(Dense(self.action_space_size, activation='softmax'))
+        # model.compile(loss='mse', optimizer='adam', metrics=['mae'])
+        # return model
 
     def set_reward(self, reward):
         """
@@ -134,67 +146,16 @@ class DQNagent():
     def q_learning(self):
         '''
         Use q_learning to improve the neural net
+        Determines the reward that previous action received, uses this to train the model to find best rewards
         '''  
         
-        self.env_matrix, self.temp_reward
         target_q = self.temp_reward + self.gamma * self.action
-        self.x.append(self.env_matrix)
-        self.y.append(target_q)
-        if len(self.x) % 5 == 0:
-            self.model.fit(self.x[-5:], np.array(self.y[-5:]), epochs=1, verbose=0)
+        target_vec = self.model.predict(self.old_matrix)[0]
+        target_vec[self.action] = target_q
+        self.model.fit(self.old_matrix, target_vec.reshape(-1, self.action_space_size), epochs=1, verbose=0)
+        
         self.old_matrix = self.env_matrix.copy().reshape(-1, 600, 600, 1)
-
-    def train(self, terminal_state, step):
-
-        # Start training only if certain number of samples is already saved
-        if len(self.replay_memory) < MIN_REPLAY_MEMORY_SIZE:
-            return
-
-        # Get a minibatch of random samples from memory replay table
-        minibatch = random.sample(self.replay_memory, MINIBATCH_SIZE)
-
-        # Get current states from minibatch, then query NN model for Q values
-        current_states = np.array([transition[0] for transition in minibatch])/255
-        current_qs_list = self.model.predict(current_states)
-
-        # Get future states from minibatch, then query NN model for Q values
-        # When using target network, query it, otherwise main network should be queried
-        new_current_states = np.array([transition[3] for transition in minibatch])/255
-        future_qs_list = self.target_model.predict(new_current_states)
-
-        X = []
-        y = []
-
-        # Now we need to enumerate our batches
-        for index, (current_state, action, reward, new_current_state, done) in enumerate(minibatch):
-
-            # If not a terminal state, get new q from future states, otherwise set it to 0
-            # almost like with Q Learning, but we use just part of equation here
-            if not done:
-                max_future_q = np.max(future_qs_list[index])
-                new_q = reward + DISCOUNT * max_future_q
-            else:
-                new_q = reward
-
-            # Update Q value for given state
-            current_qs = current_qs_list[index]
-            current_qs[action] = new_q
-
-            # And append to our training data
-            X.append(current_state)
-            y.append(current_qs)
-
-        # Fit on all samples as one batch, log only on terminal state
-        self.model.fit(np.array(X)/255, np.array(y), batch_size=MINIBATCH_SIZE, verbose=0, shuffle=False, callbacks=[self.tensorboard] if terminal_state else None)
-
-        # Update target network counter every episode
-        if terminal_state:
-            self.target_update_counter += 1
-
-        # If counter reaches set value, update target network with weights of main network
-        if self.target_update_counter > UPDATE_TARGET_EVERY:
-            self.target_model.set_weights(self.model.get_weights())
-            self.target_update_counter = 0
+        self.temp_reward = 0
 
     def save_weights(self):
         weights = self.model.get_weights()
@@ -206,6 +167,10 @@ class DQNagent():
 
     def update_replay_memory(self, transition):
         self.replay_memory.append(transition)
+
+    def reset_rewards(self):
+        self.reward_list.append(self.total_reward)
+        self.total_reward = 0
 
 
 if __name__ == '__main__':
