@@ -40,12 +40,12 @@ class Game:
 
 		# Audio
 		music = pygame.mixer.Sound('../audio/music.wav')
-		music.set_volume(0.2)
+		music.set_volume(0.000001)
 		music.play(loops = -1)
 		self.laser_sound = pygame.mixer.Sound('../audio/laser.wav')
-		self.laser_sound.set_volume(0.1)
+		self.laser_sound.set_volume(0.000001)
 		self.explosion_sound = pygame.mixer.Sound('../audio/explosion.wav')
-		self.explosion_sound.set_volume(0.1)
+		self.explosion_sound.set_volume(0.000001)
 
 		# done
 		self.done = False
@@ -137,7 +137,7 @@ class Game:
 				if pygame.sprite.spritecollide(laser,self.player,False):
 					laser.kill()
 					self.lives -= 1
-					dqn.set_reward(-500)
+					dqn.set_reward(-200)
 					if self.lives <= 0:
 						self.done = True
 						
@@ -148,13 +148,7 @@ class Game:
 				pygame.sprite.spritecollide(alien,self.blocks,True)
 
 				if pygame.sprite.spritecollide(alien,self.player,False):
-					self.done = True
-
-				x, y, w, h = alien.rect
-				if y <= 0:
-					dqn.set_reward(-2000)
-					self.done = True
-						
+					self.done = True					
 	
 	def display_lives(self):
 		for live in range(self.lives - 1):
@@ -219,9 +213,9 @@ class CRT:
 if __name__ == '__main__':
 
 	dqn = DQNagent()
-	num_episodes = 2
+	num_episodes = 100
 	
-	for _ in range(num_episodes):
+	for n in range(num_episodes):
 		pygame.init()
 		screen_width = 600
 		screen_height = 600
@@ -239,6 +233,8 @@ if __name__ == '__main__':
 							
 				if event.type == ALIENLASER:
 					game.alien_shoot()
+				if event.type == pygame.QUIT:
+					done = True
 
 			screen.fill((30,30,30))
 			game.run()
@@ -250,9 +246,10 @@ if __name__ == '__main__':
 
 		# after an episode, decay epsilon
 		dqn.decay()
+		print(f'Game #{n}, Reward: {dqn.total_reward}')
 		dqn.reset_rewards()
 	# before exit, save weights
-	dqn.save_weights()
+	dqn.save_model()
 	print(f'Average Score: {np.mean(dqn.reward_list)} for {num_episodes} runs')	
 	print(dqn.reward_list)
 

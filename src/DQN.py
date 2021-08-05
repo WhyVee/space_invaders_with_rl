@@ -19,16 +19,22 @@ class DQNagent():
                         #  2) Shooting: True or False
         self.action_space_size = 6
 
-        # build model, load and set weights
+        # build model, load and set weights -OR- load model
+        # 1
         self.model = self.build_model()
-        # print(self.model.summary())
         weights = self.load_weights()
         self.model.set_weights(weights)
+
+        # 2
+        # self.model = self.load_model()
+
+        # verify model built, check summary
+        # print(self.model.summary())
         
         # q learning variables
         self.gamma = 0.95
         self.eps = 0.5
-        self.decay_factor = 0.999
+        self.decay_factor = 0.95
         self.r_avg_list = []
 
         # rewards, temp and total
@@ -135,6 +141,19 @@ class DQNagent():
             self.prediction = self.model.predict(self.old_matrix)
             self.action = np.argmax(self.prediction)
 
+        if self.action == 0:
+            self.temp_reward -= 50
+        elif self.action == 1:
+            self.temp_reward += 50
+        elif self.action == 2:
+            self.temp_reward += 50
+        elif self.action == 3:
+            self.temp_reward += 100
+        elif self.action == 4:
+            self.temp_reward += 100
+        elif self.action == 5:
+            self.temp_reward += 50
+
         return self.action
 
     def decay(self):
@@ -157,9 +176,12 @@ class DQNagent():
         self.old_matrix = self.env_matrix.copy().reshape(-1, 600, 600, 1)
         self.temp_reward = 0
 
-    def save_weights(self):
-        weights = self.model.get_weights()
-        pickle.dump(weights, open('weights.pkl', 'wb'))
+    def save_model(self):
+        pickle.dump(self.model, open('DQNmodel.pkl', 'wb'))
+
+    def load_model(self):
+        model = pickle.load(open('DQNmodel.pkl', 'rb'))
+        return model
 
     def load_weights(self):
         weights = pickle.load(open('weights.pkl', 'rb'))
