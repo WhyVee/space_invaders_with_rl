@@ -4,8 +4,14 @@ from tensorflow.keras.layers import InputLayer, Dense, MaxPooling1D, MaxPooling2
 from tensorflow.keras.optimizers import Adam
 import pickle
 from collections import deque
-import os
-os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+from tensorflow.compat.v1 import ConfigProto
+from tensorflow.compat.v1 import InteractiveSession
+
+config = ConfigProto()
+config.gpu_options.allow_growth = True
+session = InteractiveSession(config=config)
+# import os
+# os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 
 
 class DQNagent():
@@ -19,14 +25,11 @@ class DQNagent():
                         #  2) Shooting: True or False
         self.action_space_size = 6
 
-        # build model, load and set weights -OR- load model
+        # build model, load and set weights
         # 1
         self.model = self.build_model()
         weights = self.load_weights()
         self.model.set_weights(weights)
-
-        # 2
-        # self.model = self.load_model()
 
         # verify model built, check summary
         # print(self.model.summary())
@@ -141,18 +144,25 @@ class DQNagent():
             self.prediction = self.model.predict(self.old_matrix)
             self.action = np.argmax(self.prediction)
 
+        # give temporary reward based on action
+        # no movement, no shooting
         if self.action == 0:
-            self.temp_reward -= 50
+            self.temp_reward -= 500
+        # move right, no shooting
         elif self.action == 1:
-            self.temp_reward += 50
+            self.temp_reward += 500
+        # move left, no shooting    
         elif self.action == 2:
-            self.temp_reward += 50
+            self.temp_reward += 500
+        # move right, shooting
         elif self.action == 3:
-            self.temp_reward += 100
+            self.temp_reward += 500
+        # move left, shooting
         elif self.action == 4:
-            self.temp_reward += 100
+            self.temp_reward += 500
+        # no movement, shooting
         elif self.action == 5:
-            self.temp_reward += 50
+            self.temp_reward += -500
 
         return self.action
 
@@ -168,7 +178,8 @@ class DQNagent():
         Determines the reward that previous action received, uses this to train the model to find best rewards
         '''  
         
-        target_q = self.temp_reward + self.gamma * self.action
+        target_q = (self.total_reward + self.temp_reward) + (self.gamma * self.action)
+        # target_q = self.temp_reward + self.gamma * self.action
         target_vec = self.model.predict(self.old_matrix)[0]
         target_vec[self.action] = target_q
         self.model.fit(self.old_matrix, target_vec.reshape(-1, self.action_space_size), epochs=1, verbose=0)
@@ -176,12 +187,8 @@ class DQNagent():
         self.old_matrix = self.env_matrix.copy().reshape(-1, 600, 600, 1)
         self.temp_reward = 0
 
-    def save_model(self):
-        pickle.dump(self.model, open('DQNmodel.pkl', 'wb'))
-
-    def load_model(self):
-        model = pickle.load(open('DQNmodel.pkl', 'rb'))
-        return model
+    def save_weights(self):
+        pickle.dump(self.model.get_weights(), open('weights.pkl', 'wb'))
 
     def load_weights(self):
         weights = pickle.load(open('weights.pkl', 'rb'))

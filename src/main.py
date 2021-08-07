@@ -165,15 +165,17 @@ class Game:
 			victory_surf = self.font.render('You won',False,'white')
 			victory_rect = victory_surf.get_rect(center = (screen_width / 2, screen_height / 2))
 			screen.blit(victory_surf,victory_rect)
+			self.done = True
 
 	def run(self):
-		#based on state, agent will choose an action
+		# based on state, agent will choose an action
 		action = dqn.agent_action()
 		self.player.update(action)
 
-		#pass in the current states of agent and environment
+		# pass in the current states of agent and environment
 		dqn.get_state(self.player, self.blocks, self.alien_lasers, self.extra, self.aliens)
-		# dqn.q_learning()
+		# learn based on last action and the environment after the action
+		dqn.q_learning()
 
 		self.alien_lasers.update()
 		self.extra.update()
@@ -213,7 +215,7 @@ class CRT:
 if __name__ == '__main__':
 
 	dqn = DQNagent()
-	num_episodes = 100
+	num_episodes = 200
 	
 	for n in range(num_episodes):
 		pygame.init()
@@ -249,7 +251,7 @@ if __name__ == '__main__':
 		print(f'Game #{n}, Reward: {dqn.total_reward}')
 		dqn.reset_rewards()
 	# before exit, save weights
-	dqn.save_model()
+	dqn.save_weights()
 	print(f'Average Score: {np.mean(dqn.reward_list)} for {num_episodes} runs')	
 	print(dqn.reward_list)
 
