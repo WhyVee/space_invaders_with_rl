@@ -115,10 +115,7 @@ class DQNagent():
         '''
         Each sprite has a self.rect attribute which shows the sprites x, y alignment
         pass the location of all active sprites to agent
-
-        --or--
-
-        take a screenshot? and use image processing
+        Store environment in self.env_matrix
         '''
         # reset an empty matrix the size of the screen
         self.env_matrix = np.zeros((self.screen_height,self.screen_width))
@@ -138,7 +135,8 @@ class DQNagent():
         -or-
         Based on the current state of the environment, choose the action that leads to the best reward for exploitation
         '''
-        if np.random.random() < self.eps:
+        if True: 
+        # np.random.random() < self.eps:
             self.action = np.random.randint(0, self.action_space_size)
         else:
             self.prediction = self.model.predict(self.old_matrix)
@@ -150,10 +148,10 @@ class DQNagent():
             self.temp_reward -= 500
         # move right, no shooting
         elif self.action == 1:
-            self.temp_reward += 500
+            self.temp_reward += 50
         # move left, no shooting    
         elif self.action == 2:
-            self.temp_reward += 500
+            self.temp_reward += 50
         # move right, shooting
         elif self.action == 3:
             self.temp_reward += 500
@@ -178,11 +176,11 @@ class DQNagent():
         Determines the reward that previous action received, uses this to train the model to find best rewards
         '''  
         
-        target_q = (self.total_reward + self.temp_reward) + (self.gamma * self.action)
-        # target_q = self.temp_reward + self.gamma * self.action
-        target_vec = self.model.predict(self.old_matrix)[0]
-        target_vec[self.action] = target_q
-        self.model.fit(self.old_matrix, target_vec.reshape(-1, self.action_space_size), epochs=1, verbose=0)
+        # target_q = ((self.total_reward*0.1) + self.temp_reward) + (self.gamma * self.action)
+        # # target_q = self.temp_reward + self.gamma * self.action
+        # target_vec = self.model.predict(self.old_matrix)[0]
+        # target_vec[self.action] = target_q
+        # self.model.fit(self.old_matrix, target_vec.reshape(-1, self.action_space_size), epochs=1, verbose=0)
         
         self.old_matrix = self.env_matrix.copy().reshape(-1, 600, 600, 1)
         self.temp_reward = 0
