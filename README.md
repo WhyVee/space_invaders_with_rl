@@ -9,14 +9,39 @@ To run this, you will need to have Tensorflow and PyGames installed. Fitting the
 From the src folder, run python main.py from the command line. From here, the game will launch and the model will start training in a loop of 50 games. The number of games being ran can be modified in the main.py file.
 
 ### Contents
-1. Defining the Environment
+1. Defining the Agent, Action Space, and Environment
 2. Building the Neural Network
 3. Model Training
 4. Modifying the Rewards
 5. Results and Conclusion
 6. Sources
 
-### 1. Reading in and Cleaning Data
+### 1. Defining the Agent, Action Space, and Environment
+The Agent is the vessel that the DQN model uses to perform actions. In the case of Space Invaders, the Agent is the human ship at the bottom of the screen (usually controlled by the player).  
+<img src="graphics/player.png">   
+The Action Space is all of the available actions open to the agent. For this instance, the Action Space can be broken up into two categories: movement and shooting. The Agent can be stationary, moving left or moving right. At the same time, the Agent also has the option of shooting or not shooting. This results in an Action Space with the size of 6.  
+The environment can be thought of as the game itself; the environment includes everything that the Agent can interact with, which includes the barriers, the alien spaceships as well as the lasers.  
+<img src="img/si_screenshot.png" width="500" height="500">  
+In this environment, you get points for destroying the alien spaceships and lose 200 points for getting hit. The player starts out with 3 lives and a score of 0, and tries to clear the wave of enemies. This is also an bonus spaceship that appears periodically, so it can actually be a benefit to stall the game as much as possible to get extra points.  
+Red = 100 points  
+<img src="graphics/red.png">   
+
+Green = 200 points  
+<img src="graphics/green.png">  
+
+Yellow = 300 points  
+<img src="graphics/yellow.png">  
+
+Bonus = 500 points  
+<img src="graphics/extra.png">  
+
+### 2. Building the Neural Network
+Before I started building the model, I needed to make sure I knew what was going to be put into the model as well as what I wanted to come out of it. For the first part, what would be going into the model would be the environment. In some libraries such as 'gym', this would be a relatively easy operation as this functionality is built-in. For this PyGame, however, I needed to come up with something else. Since all of the 'sprites' (i.e. images of spacecraft, lasers) have an X-Y coordinate as well as height and width, I was able to convert this into a matrix. The matrix consists of 1s where there is an object and a 0 for empty space. This is similar to a black and white image (not necessarily gray-scale) and would be able to be understood by the model. With the input taken care of, I needed to define the output. This is straight-forward, as we want the model to predict an action. Our output is therefore our action space. I assembled a Tensorflow Sequential Neural Network consisting of Convolutional Layers, Dense Layers, and ReLU Activation Layers, culminating in a final SoftMax Activation Layer. The network consists of 793,384 parameters.  
+### 3. Model Training
+The model training phase was time-consuming, and not quite as easy as just calling .fit() and .predict(). Before the model knows where to find the best rewards, it needs to explore the action space and environment in what is called exploration. As the model explores more, it starts to 'understand' where to get the optimal rewards for given actions. In an ideal world, the model would be able to pick up on key details during exploration and can transition to exploitation: picking the action that results in the best reward. For the model to understand this, I passed in the previous environment as the X, and the action space modified with the received reward from the previous action as the Y in a .fit() method. However, in Space Invaders the reward is not instant as there is significant and varying travel time for the lasers. This makes it hard for the model to identify what is the most correct action. During initial training, the model started off doing fairly well while there was about 50% exploration and 50% exploitation. As the training progressed and the exploration started to decay, the model started to not take any action at all. It would simply keep choosing action 0, which was to not fire and not move. To remedy this, I tried adjusting the rewards. 
+### 4. Modifying the Rewards
+
+### 5. Results and Conclusion
 
 <img src="img/worked_foodinsecure.png" width="500" height="500">  
 
