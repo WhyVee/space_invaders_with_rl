@@ -18,11 +18,16 @@ From the src folder, run python main.py from the command line. From here, the ga
 
 ### 1. Defining the Agent, Action Space, and Environment
 The Agent is the vessel that the DQN model uses to perform actions. In the case of Space Invaders, the Agent is the human ship at the bottom of the screen (usually controlled by the player).  
-<img src="graphics/player.png">   
+
+<img src="graphics/player.png">  
+
 The Action Space is all of the available actions open to the agent. For this instance, the Action Space can be broken up into two categories: movement and shooting. The Agent can be stationary, moving left or moving right. At the same time, the Agent also has the option of shooting or not shooting. This results in an Action Space with the size of 6.  
 The environment can be thought of as the game itself; the environment includes everything that the Agent can interact with, which includes the barriers, the alien spaceships as well as the lasers.  
+
 <img src="img/si_screenshot.png" width="500" height="500">  
+
 In this environment, you get points for destroying the alien spaceships and lose 200 points for getting hit. The player starts out with 3 lives and a score of 0, and tries to clear the wave of enemies. This is also an bonus spaceship that appears periodically, so it can actually be a benefit to stall the game as much as possible to get extra points.  
+
 Red = 100 points  
 <img src="graphics/red.png">   
 
@@ -43,6 +48,7 @@ The model training phase was time-consuming, and not quite as easy as just calli
 To modify the rewards, I decided that the easiest way to correct the model's behavior would be to give a slight reward for doing anything but remaining stationary and not shooting. I also increased the penalty for taking a hit, in the hopes that the model would start to play more defensively. This initial attempt made some progress, but I had to fine tune the rewards over a number of iterations to finally get them to a good spot. This took a large amount of time and reference to similar works, as with each change I needed to let the model play a large number of games before I could determine if I was heading in the right direction.
 ### 5. Results and Conclusion
 By the end of the project, I was able to tune the model to perform much better than a model taking random actions (the base case). Here are two short clips; the first is with a random model, the second with the DQN model.  
+
 Random Model:  
 https://youtu.be/Nl4DLOVT5fs  
 
