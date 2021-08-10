@@ -215,7 +215,7 @@ class CRT:
 if __name__ == '__main__':
 
 	dqn = DQNagent()
-	num_episodes = 25
+	num_episodes = 50
 	
 	for n in range(num_episodes):
 		pygame.init()

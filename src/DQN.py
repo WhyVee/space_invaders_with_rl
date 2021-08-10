@@ -32,7 +32,7 @@ class DQNagent():
         self.model.set_weights(weights)
 
         # verify model built, check summary
-        # print(self.model.summary())
+        print(self.model.summary())
         
         # q learning variables
         self.gamma = 0.95
@@ -48,41 +48,25 @@ class DQNagent():
         # instantiate prediction with 0s, len of action space
         self.prediction = np.zeros(self.action_space_size)
 
-        # build up envs in x and rewards in y, to fit the model in batches
-        self.x = []
-        self.y = []
-
-
     def build_model(self):
         model = Sequential()
 
         model.add(Conv2D(10, (9, 9), input_shape=self.env_matrix.shape))
-        # model.add(Conv2D(100, (3, 3), input_shape=self.env_matrix.shape))
         model.add(Activation('relu'))
         model.add(MaxPooling2D(pool_size=(4,4)))
-        # model.add(MaxPooling2D(pool_size=(2,2)))
         model.add(Dropout(0.2))
 
         model.add(Conv2D(10, (9,9)))
-        # model.add(Conv2D(100, (3,3)))
         model.add(Activation('relu'))
         model.add(MaxPooling2D(pool_size=(4,4)))
-        # model.add(MaxPooling2D(pool_size=(2,2)))
         model.add(Dropout(0.2))
 
-        model.add(Flatten())  # this converts our 3D feature maps to 1D feature vectors
+        model.add(Flatten())
         model.add(Dense(64))
 
         model.add(Dense(self.action_space_size, activation='softmax'))  # ACTION_SPACE_SIZE = how many choices (6)
         model.compile(loss="mse", optimizer=Adam(lr=0.001), metrics=['accuracy'])
         return model
-
-        # model = Sequential()
-        # model.add(InputLayer(batch_input_shape=self.env_matrix.shape))
-        # model.add(Dense(10, activation='sigmoid'))
-        # model.add(Dense(self.action_space_size, activation='softmax'))
-        # model.compile(loss='mse', optimizer='adam', metrics=['mae'])
-        # return model
 
     def set_reward(self, reward):
         """
@@ -135,8 +119,7 @@ class DQNagent():
         -or-
         Based on the current state of the environment, choose the action that leads to the best reward for exploitation
         '''
-        if True: 
-        # np.random.random() < self.eps:
+        if np.random.random() < self.eps:
             self.action = np.random.randint(0, self.action_space_size)
         else:
             self.prediction = self.model.predict(self.old_matrix)
@@ -166,7 +149,7 @@ class DQNagent():
 
     def decay(self):
         '''
-        Decay epsilor after each game
+        Decay epsilon after each game
         '''
         self.eps *= self.decay_factor
 
@@ -176,11 +159,11 @@ class DQNagent():
         Determines the reward that previous action received, uses this to train the model to find best rewards
         '''  
         
-        # target_q = ((self.total_reward*0.1) + self.temp_reward) + (self.gamma * self.action)
-        # # target_q = self.temp_reward + self.gamma * self.action
-        # target_vec = self.model.predict(self.old_matrix)[0]
-        # target_vec[self.action] = target_q
-        # self.model.fit(self.old_matrix, target_vec.reshape(-1, self.action_space_size), epochs=1, verbose=0)
+        target_q = ((self.total_reward*0.1) + self.temp_reward) + (self.gamma * self.action)
+        # target_q = self.temp_reward + self.gamma * self.action
+        target_vec = self.model.predict(self.old_matrix)[0]
+        target_vec[self.action] = target_q
+        self.model.fit(self.old_matrix, target_vec.reshape(-1, self.action_space_size), epochs=1, verbose=0)
         
         self.old_matrix = self.env_matrix.copy().reshape(-1, 600, 600, 1)
         self.temp_reward = 0
@@ -191,9 +174,6 @@ class DQNagent():
     def load_weights(self):
         weights = pickle.load(open('weights.pkl', 'rb'))
         return weights
-
-    def update_replay_memory(self, transition):
-        self.replay_memory.append(transition)
 
     def reset_rewards(self):
         self.reward_list.append(self.total_reward)
