@@ -1,6 +1,6 @@
 # Defeat Space Invaders with Reinforcement Learning!
 
-## Using a Deep Q-Network to play a Space Invaders clone made in PyGames
+## Using a Deep Q-Network to play a Space Invaders clone made in PyGame
 
 ### Summary
 Reinforcement learning is the future. Developing reinforcement learning models using video games is a great strategy that reduces costs by learning in an environment that can do no damage. An example of training in a real-life environment would be using a reinforcement learning model with a robot in a warehouse stacking boxes. If the model makes a mistake, boxes or even the warehouse itself could be damaged. Starting small, I would like to create a reinforcement learning model to play a simple game of space invaders. The business use for a model like this would be to implement it in future games; an enemy or ally that does not just run “on tracks” provides more enjoyment, and hopefully will provide a better experience.
@@ -40,12 +40,18 @@ Before I started building the model, I needed to make sure I knew what was going
 ### 3. Model Training
 The model training phase was time-consuming, and not quite as easy as just calling .fit() and .predict(). Before the model knows where to find the best rewards, it needs to explore the action space and environment in what is called exploration. As the model explores more, it starts to 'understand' where to get the optimal rewards for given actions. In an ideal world, the model would be able to pick up on key details during exploration and can transition to exploitation: picking the action that results in the best reward. For the model to understand this, I passed in the previous environment as the X, and the action space modified with the received reward from the previous action as the Y in a .fit() method. However, in Space Invaders the reward is not instant as there is significant and varying travel time for the lasers. This makes it hard for the model to identify what is the most correct action. During initial training, the model started off doing fairly well while there was about 50% exploration and 50% exploitation. As the training progressed and the exploration started to decay, the model started to not take any action at all. It would simply keep choosing action 0, which was to not fire and not move. To remedy this, I tried adjusting the rewards. 
 ### 4. Modifying the Rewards
-
+To modify the rewards, I decided that the easiest way to correct the model's behavior would be to give a slight reward for doing anything but remaining stationary and not shooting. I also increased the penalty for taking a hit, in the hopes that the model would start to play more defensively. This initial attempt made some progress, but I had to fine tune the rewards over a number of iterations to finally get them to a good spot. This took a large amount of time and reference to similar works, as with each change I needed to let the model play a large number of games before I could determine if I was heading in the right direction.
 ### 5. Results and Conclusion
+By the end of the project, I was able to tune the model to perform much better than a model taking random actions (the base case). Here are two short clips; the first is with a random model, the second with the DQN model.  
+Random Model:  
+https://youtu.be/Nl4DLOVT5fs  
 
-<img src="img/worked_foodinsecure.png" width="500" height="500">  
+DQN Model:  
+https://youtu.be/1rppth2d5-k  
+
+In a test of 25 games played, the average score for the DQN model was 7872, compared to the average score of 3484 from the random model. The DQN model found an excellent strategy of going to one side and remaining there. In this position, it was unlikely get hit while able to return fire effectively. The model was even able to get a high score of 11700 twice during the test. The significant drawback of this though is that the model in non-responsive to enemy fire. I believe this is due to the set-up of the learning process. In order to impove the model, I need to increase the memory of actions and their effect on the environment. This would result in a model that could be more defensive and hopefully improve the average score. While there isn't much of a market demand for a model that can play Space Invaders, this is a stepping stone to a more sophisticated model that can play more sophisticated games.
 
 ### 6. Sources  
-Simple Space Invaders clone made in PyGame
-Created by Clear Code Projects
+Simple Space Invaders clone made in PyGame  
+Created by Clear Code Projects  
 https://github.com/clear-code-projects/Space-invaders
