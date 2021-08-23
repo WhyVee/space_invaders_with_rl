@@ -58,6 +58,6 @@ https://youtu.be/1rppth2d5-k
 In a test of 25 games played, the average score for the DQN model was 7872, compared to the average score of 3484 from the random model. The DQN model found an excellent strategy of going to one side and remaining there. In this position, it was unlikely get hit while able to return fire effectively. The model was even able to get a high score of 11700 twice during the test. The significant drawback of this though is that the model in non-responsive to enemy fire. I believe this is due to the set-up of the learning process. In order to impove the model, I need to increase the memory of actions and their effect on the environment. This would result in a model that could be more defensive and hopefully improve the average score. While there isn't much of a market demand for a model that can play Space Invaders, this is a stepping stone to a more sophisticated model that can play more sophisticated games.
 
 ### 6. Sources  
-Simple Space Invaders clone made in PyGame  
+Space Invaders clone made in PyGame  
 Created by Clear Code Projects  
 https://github.com/clear-code-projects/Space-invaders
